@@ -72,12 +72,15 @@ directive('grapheForces', function() {
 							.attr( "fill-opacity", 0 )
 							.attr("text-anchor","middle")
 							.style("text-anchor","midlle")
-							.style("font-size", "6px")
+							.style("font-size", "12px")
+							.style("font-weight","bold")
 							.attr("dy",0)
 							//.style("fill","none")
 							.attr("startOffset","50%")
 							.attr("xlink:href",function(d,i) { return "#linkId_" + i;})
-							.text(function(d) { return "metric=" +d.metric + " " +d.l_ip + "<-->" +d.r_ip;});
+							.text(function(d) { return "metric=" + d.metric });
+							//" " + "bw=" + d.bw + " " +"provider=" + d.provider + " " + "interface=" + d.l_ip;});
+							//+ " " +d.l_ip + "<-->" +d.r_ip;});
 
 				//end path 
 				
@@ -90,7 +93,7 @@ directive('grapheForces', function() {
 				
 				node.append("circle")
 					 .attr("class", "node")
-					 .attr("r", 10)
+					 .attr("r", 20)
 					 .style("fill", function(d) { return color(d.name.slice(-3)); }) //color based on last 3 char using category20
 
 					 .on("mouseover", fade(.1))
@@ -163,34 +166,36 @@ directive('grapheForces', function() {
 					var
 						dx = d.target.x - d.source.x,
 						dy = d.target.y - d.source.y,
-						dr = 900/d.linknum,  		
-						id = d.linknum ;
-						myArray = [ {'id':1,'offset':0},
-									{'id':2,'offset':5},
-									{'id':3,'offset':5},
-									{'id':4,'offset':10},
-									{'id':5,'offset':10},
-								];
-					for (var i = 0, len = myArray.length; i < len; i++) 
-						{
-						if (myArray[i].id === d.linknum)
-							{
-							var offset_map;
-							offset_map = myArray[i].offset; 
+						dr = Math.sqrt(dx * dx + dy * dy),
+						
+								r = 22
+								numLinks = 5
+								gap = 2*r / (numLinks + 1) 
+								gap = ((d.linknum -1) * gap) + gap
+								gap = Math.max(0, gap)
+								gap = Math.round(gap)
+
+								//radius - line stroke width
+							var startY = d.source.y - (r-2) + gap
+							var endY = d.target.y - (r-2) + gap 
+							endY = Math.round(endY)
+							
+						    var endX = (d.target.x + d.source.x) / 2;
+						    var endY = (endY + startY) / 2;
+							
+
+							var len = dr - ((dr/2) * Math.sqrt(3));
+								endX = endX + (  len/dr) ;
+								endY = endY + (  len/dr) ;
+
+							if ( endX - d.source.x > 0) {
+						return "M" + d.source.x  + "," + startY  + "L" + endX + "," + endY;
 							}
-						}
+							else {
+						return "M" + endX  + "," + endY  + "L" + d.source.x + "," + startY;
+							}
 
-					offset = offset_map;
 
-					if (d.linknum == 1) {
-						return "M" + ( d.source.x ) + "," + ( d.source.y  ) + "L" + ( d.target.x )  + "," + ( d.target.y );
-						} 
-					else if (d.linknum % 2) { 
-						return "M" + ( d.source.x - offset ) + "," + ( d.source.y - offset ) + "L" + ( d.target.x - offset)  + "," + ( d.target.y - offset);
-						} 
-					else { 
-						return "M" + ( d.source.x + offset) + "," + ( d.source.y  + offset) + "L" + ( d.target.x + offset)  + "," + ( d.target.y + offset);
-						}
 
 					}
 				);
@@ -214,10 +219,15 @@ controller('AppCtrl', function ($scope , $filter , $http ) {
 		var re_target = new RegExp (target);
 		//define the values for the data
 	  	var grapheDatas1 = 
-[{'r_ip': '81.91.194.53', 'l_int': '335', 'target': 'bdr1.lab', 'metric': '500', 'source': 'vrr1.pgt', 'r_int': '345', 'l_ip': '81.91.194.52'}, 
-{'r_ip': '81.91.194.51', 'l_int': '333', 'target': 'bdr1.lab', 'metric': '500', 'source': 'vrr1.pgt', 'r_int': '437', 'l_ip': '81.91.194.50'}, 
-{'r_ip': '192.168.1.30', 'l_int': '393', 'target': 'AGG1.INX.LAB', 'metric': '10', 'source': 'bdr1.lab', 'r_int': '333', 'l_ip': '192.168.1.29'}
+		
+[
+
+{'r_ip': '1.1.1.160', 'l_int': '333', 'target': 'd', 'metric': '10', 'source': 'c', 'r_int': '74', 'l_ip': '1.1.1.161'},
+{'r_ip': 0, 'l_int': 0, 'target': 'd', 'metric': '10', 'source': 'c','r_int': '74', 'l_ip': '1.1.1.161'},
+{'r_ip': 0, 'l_int': 0, 'target': 'c', 'metric': '10', 'source': 'd','r_int': '74', 'l_ip': '1.1.1.161'},
 ]
+
+
 
 	//sort array 
 	grapheDatas1.sort(function(a,b) {
